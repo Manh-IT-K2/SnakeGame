@@ -11,15 +11,20 @@ import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.example.snakegame.ui.theme.DarkGreen
+import com.example.snakegame.ui.theme.DarkOrange
 import com.example.snakegame.ui.theme.Shapes
 import com.example.snakegame.ui.theme.SnakeGameTheme
 import kotlinx.coroutines.CoroutineScope
@@ -54,6 +59,7 @@ class MainActivity : ComponentActivity() {
 
 data class State(val food: Pair<Int, Int>, val snake: List<Pair<Int, Int>>)
 
+var score = 0
 class Game(private val scope: CoroutineScope) {
 
     private val mutex = Mutex()
@@ -75,7 +81,7 @@ class Game(private val scope: CoroutineScope) {
             var snakeLength = 4
 
             while (true) {
-                delay(150)
+                delay(200)
                 mutableState.update {
                     val newPosition = it.snake.first().let { poz ->
                         mutex.withLock {
@@ -87,10 +93,12 @@ class Game(private val scope: CoroutineScope) {
                     }
 
                     if (newPosition == it.food) {
+                        score++
                         snakeLength++
                     }
 
                     if (it.snake.contains(newPosition)) {
+                        score = 0
                         snakeLength = 4
                     }
 
@@ -116,6 +124,25 @@ fun Snake(game: Game) {
     val state = game.state.collectAsState(initial = null)
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(modifier = Modifier.padding(top = 20.dp)) {
+            Text(
+                text = "Score: ",
+                style = TextStyle(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp
+                )
+            )
+            Text(
+                text = "$score",
+                style = TextStyle(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp
+                ),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
         state.value?.let {
             Board(it)
         }
@@ -150,13 +177,13 @@ fun Buttons(onDirectionChange: (Pair<Int, Int>) -> Unit) {
 
 @Composable
 fun Board(state: State) {
-    BoxWithConstraints(Modifier.padding(16.dp)) {
+    BoxWithConstraints(Modifier.padding(top = 40.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)) {
         val tileSize = maxWidth / Game.BOARD_SIZE
 
         Box(
             Modifier
                 .size(maxWidth)
-                .border(2.dp, DarkGreen)
+                .border(2.dp, DarkOrange)
         )
 
         Box(
@@ -164,7 +191,7 @@ fun Board(state: State) {
                 .offset(x = tileSize * state.food.first, y = tileSize * state.food.second)
                 .size(tileSize)
                 .background(
-                    DarkGreen, CircleShape
+                    DarkOrange, CircleShape
                 )
         )
 
@@ -174,7 +201,7 @@ fun Board(state: State) {
                     .offset(x = tileSize * it.first, y = tileSize * it.second)
                     .size(tileSize)
                     .background(
-                        DarkGreen, Shapes.small
+                        DarkOrange, Shapes.small
                     )
             )
         }
